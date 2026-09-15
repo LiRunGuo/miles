@@ -609,6 +609,21 @@ async def test_dynamic_filter_records_the_prompt_as_explicitly_dropped(sample_fl
     assert event.reason == "dynamic_filter"
 
 
+async def test_missing_reward_records_the_prompt_as_explicitly_dropped(sample_flow_event_dir: Path) -> None:
+    """A group dropped for a missing reward resolves its issued samples, like every other drop."""
+    args = make_args(enable_sample_ownership_checker=True, rollout_batch_size=1)
+    buffer = data_buffer.DefaultDataBuffer(
+        data_buffer.DataBufferConstructorInput(args=args, unused_handler_fn=lambda group, reason: None)
+    )
+
+    await put_group(buffer, make_group(1, reward=None))
+
+    [event] = read_events(sample_flow_event_dir)
+    assert isinstance(event, ExplicitlyDroppedSamplesEvent)
+    assert event.source_sample_indices == [10, 11]
+    assert event.reason == "missing_reward"
+
+
 async def test_stale_group_reports_the_reason_to_the_unused_policy() -> None:
     """The configured policy can distinguish stale output from aborted generation."""
     calls: list[tuple[list[Sample], data_buffer.UnusedReason]] = []

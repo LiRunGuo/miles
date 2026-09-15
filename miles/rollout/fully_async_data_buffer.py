@@ -185,6 +185,9 @@ class DefaultDataBuffer(DataBuffer):
         output = apply_missing_reward_filter(self._args, input.group)
         if not output.keep:
             self._metric_gatherer.on_dynamic_filter_drop(reason=output.reason)
+            SampleOwnershipRecorder.log_dropped_samples(
+                args=self._args, samples=input.prompt_group, reason="missing_reward"
+            )
             return False
 
         self._metric_gatherer.on_group_before_dynamic_filter(self._args, input.group)
