@@ -3,6 +3,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+from tests.fast.import_isolation_utils import modules_imported_by
 
 import miles.utils.audit_utils.sample_ownership.recorder as recorder_module
 from miles.rollout.data_source import DataSource
@@ -185,3 +186,9 @@ class TestPublishModelCompanionInfo:
         assert event.sample_counts[0].sample.source_sample_index == 10
         assert event.sample_counts[0].count == 1
         assert event.skipped_nonfinite_sample_counts == []
+
+
+class TestRecorderImportCycle:
+    def test_importing_the_dataset_module_in_a_clean_interpreter_succeeds(self) -> None:
+        """The recorder must not pull DataSource at module level, or miles.utils.data cannot import."""
+        assert "miles.utils.audit_utils.sample_ownership.recorder" in modules_imported_by("miles.utils.data")

@@ -2,12 +2,11 @@ import argparse
 import contextvars
 from collections.abc import Callable, Iterator, Sequence
 from contextlib import contextmanager
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import torch
 
 from miles.backends.training_utils.model_companion import ModelCompanionSampleConsumptionUtils
-from miles.rollout.data_source import DataSource
 from miles.utils.audit_utils.event_logger.logger import get_event_logger, is_event_logger_initialized
 from miles.utils.audit_utils.event_logger.models import (
     DataSourceIssuedSamplesEvent,
@@ -18,6 +17,9 @@ from miles.utils.audit_utils.event_logger.models import (
     TrainerModelCompanionInfoEvent,
 )
 from miles.utils.types import Sample, SampleLineage
+
+if TYPE_CHECKING:
+    from miles.rollout.data_source import DataSource
 
 _drop_logging_suppressed: contextvars.ContextVar[bool] = contextvars.ContextVar(
     "drop_logging_suppressed",
@@ -40,7 +42,7 @@ class SampleOwnershipRecorder:
         cls,
         *,
         args: argparse.Namespace,
-        data_source: DataSource,
+        data_source: "DataSource",
         current_rollout_id: Callable[[], int],
     ) -> None:
         if not args.enable_sample_ownership_checker:
