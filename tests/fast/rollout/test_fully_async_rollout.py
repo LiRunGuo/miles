@@ -1170,6 +1170,24 @@ class TestDeadWorkerEndsTheWait:
         [record] = worker_errors(caplog)
         assert record.exc_info is None
 
+    async def test_a_worker_death_cancels_every_concurrent_waiting_step(self, monkeypatch):
+        """Two policies drain the same rollout function at once, so a single cancel slot strands one of them."""
+        args = make_args(rollout_batch_size=1)
+        fn = make_fn(monkeypatch, args, FakeDataSource())
+        fn._output = WedgedBuffer(
+            data_buffer.DataBufferConstructorInput(args=args, unused_handler_fn=lambda group, reason: None)
+        )
+        watch_worker(fn, asyncio.create_task(_never_returns()))
+        drains = [asyncio.create_task(fn._drain(train_input(rollout_id=0))) for _ in range(2)]
+        await fn._output.waiting.wait()
+        assert len(fn._worker_error_cancel_targets) == 2
+
+        fn._worker.cancel()
+
+        for drain in drains:
+            with pytest.raises(asyncio.CancelledError):
+                await asyncio.wait_for(drain, timeout=5)
+
     async def test_a_worker_that_returned_cancels_the_waiting_step(self, monkeypatch, caplog):
         """The loop never returns normally, so a return is a bug that has to surface instead of hanging."""
         release = asyncio.Event()
