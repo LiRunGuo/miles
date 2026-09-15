@@ -24,6 +24,19 @@ class TestRolloutExecutorOutputSnapshotter:
 
         assert restored.get(trainer_model_id=None, rollout_id=3) is None
 
+    def test_the_ci_switch_lets_the_regenerated_batch_be_captured(self, tmp_path: Path) -> None:
+        """The refused restored entry must go, or capturing the regenerated batch hits the duplicate key assert."""
+        snapshotter = _RolloutExecutorOutputSnapshotter(args=_args())
+        snapshotter.capture(trainer_model_id=None, rollout_id=3, data=[Sample(index=7)], metadata={})
+        snapshotter.save(tmp_path)
+        restored = _RolloutExecutorOutputSnapshotter(
+            args=Namespace(ci_test=True, ci_inject_missing_prefetched_batch_bug=True)
+        )
+        restored.load(tmp_path)
+
+        assert restored.get(trainer_model_id=None, rollout_id=3) is None
+        restored.capture(trainer_model_id=None, rollout_id=3, data=[Sample(index=8)], metadata={})
+
     def test_a_replayed_batch_cannot_be_captured_twice(self, tmp_path: Path) -> None:
         """Re-capturing a key would overwrite the snapshot a replayed rollout still owns."""
         snapshotter = _RolloutExecutorOutputSnapshotter(args=_args())

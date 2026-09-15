@@ -40,6 +40,7 @@ class _RolloutExecutorOutputSnapshotter:
             logger.info(
                 f"Injected CI bug: refusing to replay rollout {rollout_id} of trainer model {trainer_model_id}"
             )
+            self._snapshots.pop(_OutputSnapshotKey(trainer_model_id=trainer_model_id, rollout_id=rollout_id), None)
             return None
 
         key = _OutputSnapshotKey(trainer_model_id=trainer_model_id, rollout_id=rollout_id)
