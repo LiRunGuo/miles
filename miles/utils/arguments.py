@@ -3393,6 +3393,7 @@ def _resolve_sample_ownership_check(args: argparse.Namespace) -> None:
             (multi_policy, "multi-policy training has separate model companion lineages"),
             (args.debug_train_only, "train-only mode has no issuing data source"),
             (args.debug_rollout_only, "rollout-only mode has no trainer model companion"),
+            (args.debug_disable_optimizer, "a disabled optimizer trains nothing"),
             (args.num_critic_only_steps > 0, "critic-only warmup steps drop actor samples"),
         )
         if condition

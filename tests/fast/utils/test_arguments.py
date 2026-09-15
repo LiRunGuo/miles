@@ -461,6 +461,7 @@ class TestSampleOwnershipCheckArguments:
             megatron_config=None,
             debug_train_only=False,
             debug_rollout_only=False,
+            debug_disable_optimizer=False,
             enable_witness=False,
             save_debug_event_data=None,
             run_uuid="0123456789abcdef",
@@ -476,6 +477,7 @@ class TestSampleOwnershipCheckArguments:
             ({"multi_lora": True}, "multi-LoRA training can replay samples"),
             ({"debug_train_only": True}, "train-only mode has no issuing data source"),
             ({"debug_rollout_only": True}, "rollout-only mode has no trainer model companion"),
+            ({"debug_disable_optimizer": True}, "a disabled optimizer trains nothing"),
             ({"num_critic_only_steps": 1}, "critic-only warmup steps drop actor samples"),
         ],
     )
