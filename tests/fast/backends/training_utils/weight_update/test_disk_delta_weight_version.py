@@ -83,3 +83,16 @@ class _Engine:
 
     async def update_weight_version(self, weight_version, abort_all_requests=True):
         self._calls.append((self._name, weight_version, abort_all_requests))
+
+
+class TestBaselineOnlySync:
+    def test_the_baseline_capture_call_publishes_nothing(self):
+        """A cold delta restart must not hand the executor a version the engines never received."""
+        pytest.importorskip("sglang")
+        from miles.backends.training_utils.weight_update.protocols.delta import UpdateWeightFromDiskDelta
+
+        protocol = object.__new__(UpdateWeightFromDiskDelta)
+        protocol._baseline_captured = False
+        protocol._capture_baseline = lambda iter_buckets: None
+
+        assert protocol.begin_sync(7, None) is False

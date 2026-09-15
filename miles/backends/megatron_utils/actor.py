@@ -1006,7 +1006,7 @@ class MegatronTrainRayActor(TrainRayActor):
         with torch_memory_saver.disable() if self.args.offload_train else nullcontext():
             print_memory("before update_weights")
             weight_version = self._get_actor_weight_version()
-            self.weight_updater.update_weights(weight_version=weight_version)
+            published = self.weight_updater.update_weights(weight_version=weight_version)
             print_memory("after update_weights")
 
             if is_multi_lora_enabled(self.args):
@@ -1016,7 +1016,7 @@ class MegatronTrainRayActor(TrainRayActor):
                 self._multi_lora_pending_push.clear()
                 commit_weight_push(version_update_names, self._is_first_replica_megatron_main_rank)
 
-            if self.args.ci_test and len(rollout_engines) > 0 and not is_lora_enabled(self.args):
+            if published and self.args.ci_test and len(rollout_engines) > 0 and not is_lora_enabled(self.args):
                 engine = random.choice(rollout_engines)
                 engine_version = async_utils.run(engine.get_weight_version())
                 if str(engine_version) != str(weight_version):
@@ -1038,7 +1038,7 @@ class MegatronTrainRayActor(TrainRayActor):
         if process_groups_are_temporary:
             destroy_process_groups()
 
-        return weight_version
+        return weight_version if published else None
 
     @with_logs
     def load_other_checkpoint(self, model_tag: str, path: str) -> None:
