@@ -149,6 +149,7 @@ class RolloutExecutor:
             await maybe_await(self.generate_rollout.dispose())
         if (close := getattr(self.data_source, "close", None)) is not None:
             close()
+        event_analyzer.run_sample_ownership_analysis(args=self.args)
         event_analyzer.run_analysis_from_args(self.args)
         if self._metric_checker is not None:
             self._metric_checker.dispose()
